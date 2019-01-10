@@ -6,6 +6,7 @@ WORKDIR /src/
 # standard_init_linux.go:195: exec user process caused "no such file or directory"
 ENV CGO_ENABLED=0
 RUN make clean \
+  && make test \
   && make
 
 FROM ubuntu:xenial
