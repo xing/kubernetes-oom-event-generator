@@ -32,14 +32,40 @@ local permission):
 
 ## Deployment
 
+
+Example Clusterrole:
+```yaml
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: xing:controller:kubernetes-oom-event-generator
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/status
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+```
+
 Run this controller on Kubernetes with the following commands:
 
     kubectl create serviceaccount kubernetes-oom-event-generator \
       --namespace=kube-system
 
-    kubectl create clusterrole xing:controller:kubernetes-oom-event-generator \
-      --verb=get,watch,list \
-      --resource=events
+    kubectl create -f path/to/example-clusterrole.yml
+    # alternatively run: `cat | kubectl create -f -` and paste the above example, hit Ctrl+D afterwards.
 
     kubectl create clusterrolebinding xing:controller:kubernetes-oom-event-generator \
       --clusterrole=xing:controller:kubernetes-oom-event-generator \
