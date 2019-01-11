@@ -66,3 +66,16 @@ Make sure to run `go mod tidy` before you check in after changing dependencies i
 
 [Go module system]: https://github.com/golang/go/wiki/Modules
 [`xingse/kubernetes-oom-event-generator`]: https://hub.docker.com/r/xingse/kubernetes-oom-event-generator
+
+## Releases
+
+Releases are a two-step process, beginning with a manual step:
+
+* Create a release commit
+  * Increase the version number in [kubernetes-oom-event-generator.go/VERSION](kubernetes-oom-event-generator.go#20)
+  * Adjust the [CHANGELOG](CHANGELOG.md)
+* Run `make release`, which will create an image, retrieve the version from the
+  binary, create a git tag and push both your commit and the tag
+
+The Travis CI run will then realize that the current tag refers to the current master commit and
+will tag the built docker image accordingly.
