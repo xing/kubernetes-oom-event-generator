@@ -4,7 +4,4 @@ services:
 script:
   - make image
 after_success:
-  - if [[ "$TRAVIS_BRANCH" == "master" ]]; then
-      docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD ;
-      make push-image ;
-    fi
+  - .travis/perform-releases.sh kubernetes-oom-event-generator xingse/kubernetes-oom-event-generator

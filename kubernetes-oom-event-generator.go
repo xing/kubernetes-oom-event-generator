@@ -3,19 +3,29 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"runtime"
 
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/xing/kubernetes-oom-event-generator/src/util"
 	"github.com/xing/kubernetes-oom-event-generator/src/controller"
+	"github.com/xing/kubernetes-oom-event-generator/src/util"
 )
 
 var opts struct {
-	Verbose int `env:"VERBOSE" long:"verbose" description:"Show verbose debug information"`
+	Verbose int  `env:"VERBOSE" short:"v" long:"verbose" description:"Show verbose debug information"`
+	Version bool `long:"version" description:"Print version information"`
 }
+
+// VERSION represents the current version of the release.
+const VERSION = "v1.0.0"
 
 func main() {
 	util.ParseArgs(&opts)
+
+	if opts.Version {
+		printVersion()
+		return
+	}
 
 	stopChan := make(chan struct{})
 	util.InstallSignalHandler(stopChan)
@@ -31,4 +41,8 @@ func main() {
 	if err != nil {
 		glog.Fatal(err)
 	}
+}
+
+func printVersion() {
+	fmt.Printf("kubernetes-oom-event-generator %s %s/%s %s\n", VERSION, runtime.GOOS, runtime.GOARCH, runtime.Version())
 }

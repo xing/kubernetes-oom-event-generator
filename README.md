@@ -19,6 +19,7 @@ Event is generated as `Warning` with the reason `PreviousContainerWasOOMKilled`.
 
     Application Options:
       -v, --verbose= Show verbose debug information [$VERBOSE]
+          --version  Print version information
 
     Help Options:
       -h, --help     Show this help message
