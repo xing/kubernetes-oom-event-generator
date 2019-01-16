@@ -93,7 +93,7 @@ func TestEvaluatingPodStatusOnOOMKilled(t *testing.T) {
 		dummyEvent{
 			Obj:       p,
 			EventType: v1.EventTypeWarning,
-			Reason:    "PreviousPodWasOOMKilled",
+			Reason:    "PreviousContainerWasOOMKilled",
 			Message:   "The previous instance of the container 'our-container' (our-container-1234) was OOMKilled",
 		},
 	}, recorder.Events)

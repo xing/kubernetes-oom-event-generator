@@ -100,7 +100,7 @@ func (c *Controller) evaluatePodStatus(pod *corev1_api.Pod) {
 
 		if c.setRestartCount(string(pod.UID), s.ContainerID, s.RestartCount) {
 			glog.V(1).Infof("The container '%s' in '%s/%s' was restarted for the %d time", s.Name, pod.Namespace, pod.Name, s.RestartCount)
-			c.recorder.Eventf(pod, v1.EventTypeWarning, "PreviousPodWasOOMKilled", "The previous instance of the container '%s' (%s) was OOMKilled", s.Name, s.ContainerID)
+			c.recorder.Eventf(pod, v1.EventTypeWarning, "PreviousContainerWasOOMKilled", "The previous instance of the container '%s' (%s) was OOMKilled", s.Name, s.ContainerID)
 			ProcessedContainerUpdates.WithLabelValues("oomkilled_event_sent").Inc()
 		} else {
 			glog.V(1).Infof("Restart count hasn't changed for '%s' in '%s/%s'", s.Name, pod.Namespace, pod.Name)
