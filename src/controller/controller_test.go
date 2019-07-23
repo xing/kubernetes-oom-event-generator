@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"k8s.io/api/core/v1"
-	corev1_api "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -20,65 +19,36 @@ func init() {
 	}
 }
 
-func TestSetNewContainerRestart(t *testing.T) {
+func TestEvaluatingUninterestingEvent(t *testing.T) {
 	c := controller()
+	recorder := dummyRecorder()
+	c.recorder = recorder
+	event := event("Scaled", "ReplicaSet", "my-namespace", "rs-247484f")
+	// p := pod("OOMKilled", 1, c.startTime.Add(120))
+	c.evaluateEvent(event)
 
-	changed := c.setRestartCount("pod-1", "container-1", 1)
-
-	assert.Equal(t, len(c.podState), 1)
-	assert.Equal(t, changed, true)
+	assert.Equal(t, len(recorder.Events), 0)
 }
 
-func TestSetExistingContainerRestart(t *testing.T) {
+func TestEvaluatingInterestingEvent(t *testing.T) {
 	c := controller()
+	recorder := dummyRecorder()
+	c.recorder = recorder
+	event := event(startedEvent, podKind, "my-namespace", "rs-247484f")
+	// p := pod("OOMKilled", 1, c.startTime.Add(120))
+	c.evaluateEvent(event)
 
-	c.setRestartCount("pod-1", "container-1", 1)
-	changed := c.setRestartCount("pod-1", "container-1", 1)
-
-	assert.Equal(t, len(c.podState), 1)
-	assert.Equal(t, changed, false)
-}
-
-func TestSetMultipleNewContainerRestart(t *testing.T) {
-	c := controller()
-
-	changed1 := c.setRestartCount("pod-1", "container-1", 1)
-	changed2 := c.setRestartCount("pod-1", "container-1", 2)
-	changed3 := c.setRestartCount("pod-1", "container-1", 1)
-
-	assert.Equal(t, len(c.podState), 1)
-	assert.Equal(t, changed1, true)
-	assert.Equal(t, changed2, true)
-	assert.Equal(t, changed3, false)
-}
-
-func TestSetTwoContainerRestart(t *testing.T) {
-	c := controller()
-
-	changed1 := c.setRestartCount("pod-1", "container-1", 3)
-	changed2 := c.setRestartCount("pod-1", "container-2", 9)
-
-	assert.Equal(t, c.podState, map[string]map[string]int32(map[string]map[string]int32{"pod-1": map[string]int32{"container-2": 9, "container-1": 3}}))
-	assert.Equal(t, changed1, true)
-	assert.Equal(t, changed2, true)
-}
-
-func TestDeletePodState(t *testing.T) {
-	c := controller()
-
-	c.setRestartCount("pod-1", "container-1", 1)
-	assert.Equal(t, len(c.podState), 1)
-
-	c.deletePodState("pod-1")
-	assert.Equal(t, len(c.podState), 0)
+	assert.Equal(t, len(recorder.Events), 0)
 }
 
 func TestEvaluatingPodStatusOnNotOOMKilled(t *testing.T) {
 	c := controller()
+	recorder := dummyRecorder()
+	c.recorder = recorder
 	p := pod("", 1, c.startTime.Add(120))
 	c.evaluatePodStatus(p)
 
-	assert.Equal(t, len(c.podState), 0)
+	assert.Equal(t, len(recorder.Events), 0)
 }
 
 func TestEvaluatingPodStatusOnOOMKilled(t *testing.T) {
@@ -88,11 +58,10 @@ func TestEvaluatingPodStatusOnOOMKilled(t *testing.T) {
 	p := pod("OOMKilled", 1, c.startTime.Add(120))
 	c.evaluatePodStatus(p)
 
-	assert.Equal(t, 1, len(c.podState))
 	assert.Equal(t, []dummyEvent{
 		dummyEvent{
 			Obj:       p,
-			EventType: v1.EventTypeWarning,
+			EventType: core.EventTypeWarning,
 			Reason:    "PreviousContainerWasOOMKilled",
 			Message:   "The previous instance of the container 'our-container' (our-container-1234) was OOMKilled",
 		},
@@ -137,15 +106,26 @@ func dummyRecorder() *dummyEventRecorder {
 	return &dummyEventRecorder{}
 }
 
-func pod(terminationReason string, restartCount int32, finishedAt time.Time) *corev1_api.Pod {
-	terminatedState := corev1_api.ContainerStateTerminated{
+func event(reason, kind, namespace, name string) *core.Event {
+	return &core.Event{
+		Reason: reason,
+		InvolvedObject: core.ObjectReference{
+			Kind:      kind,
+			Namespace: namespace,
+			Name:      name,
+		},
+	}
+}
+
+func pod(terminationReason string, restartCount int32, finishedAt time.Time) *core.Pod {
+	terminatedState := core.ContainerStateTerminated{
 		Reason:     terminationReason,
 		FinishedAt: metav1.NewTime(finishedAt),
 	}
-	containerStatus := corev1_api.ContainerStatus{
+	containerStatus := core.ContainerStatus{
 		ContainerID: "our-container-1234",
 		Name:        "our-container",
-		LastTerminationState: corev1_api.ContainerState{
+		LastTerminationState: core.ContainerState{
 			Terminated: &terminatedState,
 		},
 		RestartCount: restartCount,
@@ -154,10 +134,10 @@ func pod(terminationReason string, restartCount int32, finishedAt time.Time) *co
 		Name:      "our-pod",
 		Namespace: "our-pod-namespace",
 	}
-	return &corev1_api.Pod{
+	return &core.Pod{
 		ObjectMeta: objMeta,
-		Status: corev1_api.PodStatus{
-			ContainerStatuses: []corev1_api.ContainerStatus{
+		Status: core.PodStatus{
+			ContainerStatuses: []core.ContainerStatus{
 				containerStatus,
 			},
 		},
