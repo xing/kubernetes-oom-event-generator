@@ -102,6 +102,14 @@ func isSameEventOccurrence(g *eventUpdateGroup) bool {
 		g.oldEvent.Count == g.newEvent.Count)
 }
 
+func isSimilarEnoughEvent(a, b *core.Event) bool {
+	return (a.InvolvedObject == b.InvolvedObject &&
+		a.Reason == b.Reason &&
+		a.Count == b.Count &&
+		a.FirstTimestamp == b.FirstTimestamp &&
+		a.LastTimestamp == b.LastTimestamp)
+}
+
 func (c *Controller) evaluateEvent(event *core.Event) {
 	glog.V(2).Infof("got event %s/%s (count: %d), reason: %s, involved object: %s", event.ObjectMeta.Namespace, event.ObjectMeta.Name, event.Count, event.Reason, event.InvolvedObject.Kind)
 	if !isContainerStartedEvent(event) {
@@ -121,7 +129,7 @@ func (c *Controller) evaluateEventUpdate(eventUpdate *eventUpdateGroup) {
 		glog.V(4).Infof("No old event present for event %s/%s (count: %d), reason: %s, involved object: %s, skipping processing", event.ObjectMeta.Namespace, event.ObjectMeta.Name, event.Count, event.Reason, event.InvolvedObject.Kind)
 		return
 	}
-	if eventUpdate.oldEvent == eventUpdate.newEvent {
+	if isSimilarEnoughEvent(eventUpdate.oldEvent, eventUpdate.newEvent) {
 		glog.V(4).Infof("Event %s/%s (count: %d), reason: %s, involved object: %s, did not change: skipping processing", event.ObjectMeta.Namespace, event.ObjectMeta.Name, event.Count, event.Reason, event.InvolvedObject.Kind)
 		return
 	}
