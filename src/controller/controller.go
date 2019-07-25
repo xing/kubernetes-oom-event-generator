@@ -15,7 +15,7 @@ import (
 
 const (
 	// informerSyncMinute defines how often the cache is synced from Kubernetes
-	informerSyncMinute = 3
+	informerSyncMinute = 2
 )
 
 // Controller is a controller that listens on Pod changes and create Kubernetes Events
