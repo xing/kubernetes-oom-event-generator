@@ -21,12 +21,18 @@ const (
 // Controller is a controller that listens on Pod changes and create Kubernetes Events
 // when a container reports it was previously killed
 type Controller struct {
-	Stop       chan struct{}
-	k8sFactory informers.SharedInformerFactory
-	recorder   record.EventRecorder
-	startTime  time.Time
-	stopCh     chan struct{}
-	eventCh    chan *core.Event
+	Stop           chan struct{}
+	k8sFactory     informers.SharedInformerFactory
+	recorder       record.EventRecorder
+	startTime      time.Time
+	stopCh         chan struct{}
+	eventAddedCh   chan *core.Event
+	eventUpdatedCh chan *eventUpdateGroup
+}
+
+type eventUpdateGroup struct {
+	oldEvent *core.Event
+	newEvent *core.Event
 }
 
 // NewController returns an instance of the Controller
@@ -39,27 +45,30 @@ func NewController(stop chan struct{}) *Controller {
 	eventBroadcaster.StartRecordingToSink(&corev1.EventSinkImpl{Interface: k8sClient.CoreV1().Events("")})
 
 	controller := &Controller{
-		stopCh:     make(chan struct{}),
-		Stop:       stop,
-		k8sFactory: k8sFactory,
-		eventCh:    make(chan *core.Event),
-		recorder:   eventBroadcaster.NewRecorder(scheme.Scheme, core.EventSource{Component: "oom-event-generator"}),
-		startTime:  time.Now(),
+		stopCh:         make(chan struct{}),
+		Stop:           stop,
+		k8sFactory:     k8sFactory,
+		eventAddedCh:   make(chan *core.Event),
+		eventUpdatedCh: make(chan *eventUpdateGroup),
+		recorder:       eventBroadcaster.NewRecorder(scheme.Scheme, core.EventSource{Component: "oom-event-generator"}),
+		startTime:      time.Now(),
 	}
 
 	informers.SharedInformerFactory(k8sFactory).Core().V1().Pods().Informer()
 	eventsInformer := informers.SharedInformerFactory(k8sFactory).Core().V1().Events().Informer()
 	eventsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: controller.eventAdded,
+		AddFunc: func(obj interface{}) {
+			controller.eventAddedCh <- obj.(*core.Event)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			controller.eventUpdatedCh <- &eventUpdateGroup{
+				oldEvent: oldObj.(*core.Event),
+				newEvent: newObj.(*core.Event),
+			}
+		},
 	})
 
 	return controller
-}
-
-func (c *Controller) eventAdded(obj interface{}) {
-	event := obj.(*core.Event)
-	glog.V(2).Infof("got event %s/%s", event.ObjectMeta.Namespace, event.ObjectMeta.Name)
-	c.eventCh <- event
 }
 
 // Run is the main loop that processes Kubernetes Pod changes
@@ -69,8 +78,10 @@ func (c *Controller) Run() error {
 
 	for {
 		select {
-		case event := <-c.eventCh:
+		case event := <-c.eventAddedCh:
 			c.evaluateEvent(event)
+		case eventUpdate := <-c.eventUpdatedCh:
+			c.evaluateEventUpdate(eventUpdate)
 		case <-c.Stop:
 			glog.Info("Stopping")
 			return nil
@@ -86,8 +97,39 @@ func isContainerStartedEvent(event *core.Event) bool {
 		event.InvolvedObject.Kind == podKind)
 }
 
+func isSameEventOccurrence(g *eventUpdateGroup) bool {
+	return (g.oldEvent.InvolvedObject == g.newEvent.InvolvedObject &&
+		g.oldEvent.Count == g.newEvent.Count)
+}
+
 func (c *Controller) evaluateEvent(event *core.Event) {
+	glog.V(2).Infof("got event %s/%s (count: %d), reason: %s, involved object: %s", event.ObjectMeta.Namespace, event.ObjectMeta.Name, event.Count, event.Reason, event.InvolvedObject.Kind)
 	if !isContainerStartedEvent(event) {
+		return
+	}
+	pod, err := c.k8sFactory.Core().V1().Pods().Lister().Pods(event.InvolvedObject.Namespace).Get(event.InvolvedObject.Name)
+	if err != nil {
+		glog.Errorf("Failed to retrieve pod %s/%s, due to: %v", event.InvolvedObject.Namespace, event.InvolvedObject.Name, err)
+		return
+	}
+	c.evaluatePodStatus(pod)
+}
+
+func (c *Controller) evaluateEventUpdate(eventUpdate *eventUpdateGroup) {
+	event := eventUpdate.newEvent
+	if eventUpdate.oldEvent == nil {
+		glog.V(4).Infof("No old event present for event %s/%s (count: %d), reason: %s, involved object: %s, skipping processing", event.ObjectMeta.Namespace, event.ObjectMeta.Name, event.Count, event.Reason, event.InvolvedObject.Kind)
+		return
+	}
+	if eventUpdate.oldEvent == eventUpdate.newEvent {
+		glog.V(4).Infof("Event %s/%s (count: %d), reason: %s, involved object: %s, did not change: skipping processing", event.ObjectMeta.Namespace, event.ObjectMeta.Name, event.Count, event.Reason, event.InvolvedObject.Kind)
+		return
+	}
+	if !isContainerStartedEvent(event) {
+		return
+	}
+	if isSameEventOccurrence(eventUpdate) {
+		glog.V(3).Infof("Event %s/%s (count: %d), reason: %s, involved object: %s, did not change wrt. to restart count: skipping processing", eventUpdate.newEvent.ObjectMeta.Namespace, eventUpdate.newEvent.ObjectMeta.Name, eventUpdate.newEvent.Count, eventUpdate.newEvent.Reason, eventUpdate.newEvent.InvolvedObject.Kind)
 		return
 	}
 	pod, err := c.k8sFactory.Core().V1().Pods().Lister().Pods(event.InvolvedObject.Namespace).Get(event.InvolvedObject.Name)
