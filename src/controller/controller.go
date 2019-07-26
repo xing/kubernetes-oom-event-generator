@@ -75,7 +75,7 @@ func NewController(stop chan struct{}) *Controller {
 // Run is the main loop that processes Kubernetes Pod changes
 func (c *Controller) Run() error {
 	c.k8sFactory.Start(c.stopCh)
-	c.k8sFactory.WaitForCacheSync(nil)
+	c.k8sFactory.WaitForCacheSync(c.Stop)
 
 	for {
 		select {
