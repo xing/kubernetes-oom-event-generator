@@ -24,7 +24,6 @@ func TestEvaluatingUninterestingEvent(t *testing.T) {
 	recorder := dummyRecorder()
 	c.recorder = recorder
 	event := event("Scaled", "ReplicaSet", "my-namespace", "rs-247484f")
-	// p := pod("OOMKilled", 1, c.startTime.Add(120))
 	c.evaluateEvent(event)
 
 	assert.Equal(t, len(recorder.Events), 0)
@@ -35,7 +34,6 @@ func TestEvaluatingInterestingEvent(t *testing.T) {
 	recorder := dummyRecorder()
 	c.recorder = recorder
 	event := event(startedEvent, podKind, "my-namespace", "rs-247484f")
-	// p := pod("OOMKilled", 1, c.startTime.Add(120))
 	c.evaluateEvent(event)
 
 	assert.Equal(t, len(recorder.Events), 0)
