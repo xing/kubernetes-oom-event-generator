@@ -17,6 +17,8 @@ import (
 const (
 	// informerSyncMinute defines how often the cache is synced from Kubernetes
 	informerSyncMinute = 2
+	// TerminationReasonOOMKilled is the reason of a ContainerStateTerminated that reflects an OOM kill
+	TerminationReasonOOMKilled = "OOMKilled"
 )
 
 // Controller is a controller that listens on Pod changes and create Kubernetes Events
@@ -24,6 +26,7 @@ const (
 type Controller struct {
 	Stop           chan struct{}
 	k8sFactory     informers.SharedInformerFactory
+	podLister      util.PodLister
 	recorder       record.EventRecorder
 	startTime      time.Time
 	stopCh         chan struct{}
@@ -49,6 +52,7 @@ func NewController(stop chan struct{}) *Controller {
 		stopCh:         make(chan struct{}),
 		Stop:           stop,
 		k8sFactory:     k8sFactory,
+		podLister:      k8sFactory.Core().V1().Pods().Lister(),
 		eventAddedCh:   make(chan *core.Event),
 		eventUpdatedCh: make(chan *eventUpdateGroup),
 		recorder:       eventBroadcaster.NewRecorder(scheme.Scheme, core.EventSource{Component: "oom-event-generator"}),
@@ -108,7 +112,7 @@ func (c *Controller) evaluateEvent(event *core.Event) {
 	if !isContainerStartedEvent(event) {
 		return
 	}
-	pod, err := c.k8sFactory.Core().V1().Pods().Lister().Pods(event.InvolvedObject.Namespace).Get(event.InvolvedObject.Name)
+	pod, err := c.podLister.Pods(event.InvolvedObject.Namespace).Get(event.InvolvedObject.Name)
 	if err != nil {
 		glog.Errorf("Failed to retrieve pod %s/%s, due to: %v", event.InvolvedObject.Namespace, event.InvolvedObject.Name, err)
 		return
@@ -133,7 +137,7 @@ func (c *Controller) evaluateEventUpdate(eventUpdate *eventUpdateGroup) {
 		glog.V(3).Infof("Event %s/%s (count: %d), reason: %s, involved object: %s, did not change wrt. to restart count: skipping processing", eventUpdate.newEvent.ObjectMeta.Namespace, eventUpdate.newEvent.ObjectMeta.Name, eventUpdate.newEvent.Count, eventUpdate.newEvent.Reason, eventUpdate.newEvent.InvolvedObject.Kind)
 		return
 	}
-	pod, err := c.k8sFactory.Core().V1().Pods().Lister().Pods(event.InvolvedObject.Namespace).Get(event.InvolvedObject.Name)
+	pod, err := c.podLister.Pods(event.InvolvedObject.Namespace).Get(event.InvolvedObject.Name)
 	if err != nil {
 		glog.Errorf("Failed to retrieve pod %s/%s, due to: %v", event.InvolvedObject.Namespace, event.InvolvedObject.Name, err)
 		return
@@ -144,7 +148,7 @@ func (c *Controller) evaluateEventUpdate(eventUpdate *eventUpdateGroup) {
 func (c *Controller) evaluatePodStatus(pod *core.Pod) {
 	// Look for OOMKilled containers
 	for _, s := range pod.Status.ContainerStatuses {
-		if s.LastTerminationState.Terminated == nil || s.LastTerminationState.Terminated.Reason != "OOMKilled" {
+		if s.LastTerminationState.Terminated == nil || s.LastTerminationState.Terminated.Reason != TerminationReasonOOMKilled {
 			ProcessedContainerUpdates.WithLabelValues("not_oomkilled").Inc()
 			continue
 		}
