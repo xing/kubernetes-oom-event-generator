@@ -33,6 +33,7 @@ func InstallSignalHandler(stop chan struct{}) {
 	go func() {
 		<-sigs
 		stop <- struct{}{}
+		close(stop)
 	}()
 }
 

@@ -7,10 +7,15 @@ it was previously out-of-memory killed.
 
 ## Design
 
-The Controller listens to the Kubernetes API for Pod changes. Everytime a Pod change is received,
-it checks the status of every container and searches for those claiming they were OOMKilled previously.
-If the `RestartCount` for a container is higher than the one we have in our local state, a Kubernetes
-Event is generated as `Warning` with the reason `PreviousContainerWasOOMKilled`.
+The Controller listens to the Kubernetes API for new Events and changes to
+Events. Every time a notification regarding an Event is received it checks
+whether this Event refers to a "ContainerStarted" event, based on the `Reason`
+for the Event and the `Kind` of the involved object. If this is the case
+and the Event constitutes a change (meaning it is not a not-changing update,
+which happens when the resync, that is executed every two minutes, is run) it checks
+the underlying Pod resource. Should the `LastTerminationState` of the Pod refer to
+an OOM kill the controller will emit a Kubernetes Event with a level of `Warning`
+and a reason of `PreviousContainerWasOOMKilled`.
 
 ## Usage
 

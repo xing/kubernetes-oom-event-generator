@@ -6,6 +6,7 @@ import (
 	"github.com/golang/glog"
 
 	"k8s.io/client-go/kubernetes"
+	listersV1 "k8s.io/client-go/listers/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc" // needed for local development with .kube/config
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -31,4 +32,8 @@ func Clientset() kubernetes.Interface {
 	}
 
 	return client
+}
+
+type PodLister interface {
+	Pods(namespace string) listersV1.PodNamespaceLister
 }
