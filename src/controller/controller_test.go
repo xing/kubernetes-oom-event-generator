@@ -200,7 +200,7 @@ func (d *dummyPodLister) Get(name string) (*core.Pod, error) {
 		Argument: name,
 	})
 	if len(d.MethodCalls)-2 < 0 {
-		return nil, fmt.Errorf("Did not call Pods(namespace string) first.")
+		return nil, fmt.Errorf("did not call Pods(namespace string) first")
 	}
 	call := d.MethodCalls[len(d.MethodCalls)-2]
 	if ns, ok := d.PodCollection[call.Argument]; ok {
