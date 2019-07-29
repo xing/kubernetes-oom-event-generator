@@ -59,7 +59,6 @@ func NewController(stop chan struct{}) *Controller {
 		startTime:      time.Now(),
 	}
 
-	informers.SharedInformerFactory(k8sFactory).Core().V1().Pods().Informer()
 	eventsInformer := informers.SharedInformerFactory(k8sFactory).Core().V1().Events().Informer()
 	eventsInformer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
