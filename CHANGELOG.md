@@ -9,17 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [1.1.0] - 2019-09-18
+### Changed
+- Use container started events instead of pod updates
+- Update golang docker image to 1.13.0
+
 ## [1.0.1] - 2019-01-16
 ### Changed
 - Provide release documentation in README
 - Provided a Changelog
 ### Fixed
-- Change the event reason `PreviousPodWasOOMKilled` to the correct `PreviousContainerWasOOMKilled` 
+- Change the event reason `PreviousPodWasOOMKilled` to the correct `PreviousContainerWasOOMKilled`
 
 ## [1.0.0] - 2019-01-11
 ### Added
 - Initial release as Open-Source under the Apache License v2.0
 
-[Unreleased]: https://github.com/xing/kubernetes-oom-event-generator/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/xing/kubernetes-oom-event-generator/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/xing/kubernetes-oom-event-generator/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/xing/kubernetes-oom-event-generator/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/xing/kubernetes-oom-event-generator/compare/afe6c88c3a8925c7c72ccecf4f52ff1addbbba2d...v1.0.0

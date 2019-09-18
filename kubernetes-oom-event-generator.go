@@ -17,7 +17,7 @@ var opts struct {
 }
 
 // VERSION represents the current version of the release.
-const VERSION = "v1.0.1"
+const VERSION = "v1.1.0"
 
 func main() {
 	util.ParseArgs(&opts)
