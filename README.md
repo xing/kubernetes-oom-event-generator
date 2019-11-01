@@ -37,32 +37,30 @@ local permission):
 
 ## Deployment
 
-
 Example Clusterrole:
-```yaml
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: xing:controller:kubernetes-oom-event-generator
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - pods/status
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-      - patch
-```
+
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1beta1
+    kind: ClusterRole
+    metadata:
+      name: xing:controller:kubernetes-oom-event-generator
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - pods
+          - pods/status
+        verbs:
+          - get
+          - list
+          - watch
+      - apiGroups:
+          - ""
+        resources:
+          - events
+        verbs:
+          - create
+          - patch
 
 Run this controller on Kubernetes with the following commands:
 
@@ -81,6 +79,22 @@ Run this controller on Kubernetes with the following commands:
       --env=VERBOSE=2 \
       --serviceaccount=kubernetes-oom-event-generator
 
+## Alerting on OOM killed pods
+
+When [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)
+are installed in the cluster you can alert on OOM-killed pods.
+
+Example alert:
+
+    alert: ComponentOutOfMemory
+    expr: sum_over_time(kube_pod_container_status_terminated_reason{reason="OOMKilled"}[5m])
+      > 0
+    for: 10s
+    labels:
+      severity: warning
+    annotations:
+      description: Critical Pod {{$labels.namespace}}/{{$labels.pod}} was OOMKilled.
+
 # Developing
 
 You will need a working Go installation (1.11+) and the `make` program.  You will also
@@ -93,7 +107,6 @@ and submit a pull request. You might need to modify the `go.mod` to specify desi
 constraints on dependencies.
 
 Make sure to run `go mod tidy` before you check in after changing dependencies in any way.
-
 
 [Go module system]: https://github.com/golang/go/wiki/Modules
 [`xingse/kubernetes-oom-event-generator`]: https://hub.docker.com/r/xingse/kubernetes-oom-event-generator
