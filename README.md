@@ -81,8 +81,9 @@ Run this controller on Kubernetes with the following commands:
 
 ## Alerting on OOM killed pods
 
-When [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)
-are installed in the cluster you can alert on OOM-killed pods.
+When [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) is deployed
+in the cluster and a [prometheus](https://prometheus.io) installation is scraping the metrics
+you can alert on OOM-killed pods using the prometheus alert manager.
 
 Example alert:
 
