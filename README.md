@@ -96,9 +96,8 @@ occurs.
 
 ### Using kube-state-metrics and Prometheus alerts
 
-When [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) is deployed
-in the cluster and a [prometheus](https://prometheus.io) installation is scraping the metrics
-you can alert on OOM-killed pods using the prometheus alert manager.
+When [kube-state-metrics] is deployed in the cluster and a [Prometheus] installation 
+is scraping the metrics, you can alert on OOM-killed pods using the prometheus alert manager.
 
 Example alert:
 
@@ -113,7 +112,7 @@ Example alert:
 
 The downside is that `kube_pod_container_status_terminated_reason` always returns to 0 once 
 a container starts back up. See the introduction of 
-[kube_pod_container_status_last_terminated_reason] for more details.
+[`kube_pod_container_status_last_terminated_reason`] for more details.
 
 # Developing
 
@@ -130,9 +129,11 @@ Make sure to run `go mod tidy` before you check in after changing dependencies i
 
 [Go module system]: https://github.com/golang/go/wiki/Modules
 [`xingse/kubernetes-oom-event-generator`]: https://hub.docker.com/r/xingse/kubernetes-oom-event-generator
-[kubernetes-event-forwarder-gelf]: https://github.com/xing/kubernetes-event-forwarder-gelf
 [Graylog docs]: https://docs.graylog.org/
-[kube_pod_container_status_last_terminated_reason]: https://github.com/kubernetes/kube-state-metrics/pull/535
+[kubernetes-event-forwarder-gelf]: https://github.com/xing/kubernetes-event-forwarder-gelf
+[kube-state-metrics]: https://github.com/kubernetes/kube-state-metrics
+[Prometheus]: https://prometheus.io
+[`kube_pod_container_status_last_terminated_reason`]: https://github.com/kubernetes/kube-state-metrics/pull/535
 
 ## Releases
 
