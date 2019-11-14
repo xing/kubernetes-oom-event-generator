@@ -1,10 +1,6 @@
 #! /bin/bash
 
-set -ex
-
-if [[ "$TRAVIS_BRANCH" != "master" ]]; then
-  exit 0
-fi
+set -ev
 
 app_name="$1"
 image="$2"
@@ -14,7 +10,7 @@ if [[ -z "$app_name" || -z "$image" ]]; then
   exit 1
 fi
 
-docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 docker push "$image"
 
 current_version=$(docker run --rm "$image" --version | grep -oE "$app_name [^ ]+" | cut -d ' ' -f2)

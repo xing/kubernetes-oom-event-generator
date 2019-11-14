@@ -3,5 +3,8 @@ services:
   - docker
 script:
   - make image
-after_success:
-  - .travis/perform-releases.sh kubernetes-oom-event-generator xingse/kubernetes-oom-event-generator
+deploy:
+  provider: script
+  script: bash .travis/docker_push.sh kubernetes-oom-event-generator xingse/kubernetes-oom-event-generator
+  on:
+    branch: master
