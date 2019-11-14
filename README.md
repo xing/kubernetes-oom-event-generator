@@ -77,7 +77,8 @@ Run this controller on Kubernetes with the following commands:
     kubectl run kubernetes-oom-event-generator \
       --image=xingse/kubernetes-oom-event-generator \
       --env=VERBOSE=2 \
-      --serviceaccount=kubernetes-oom-event-generator
+      --serviceaccount=kubernetes-oom-event-generator \
+      --namespace=kube-system
 
 ## Alerting on OOM killed pods
 
