@@ -61,6 +61,8 @@ Example Clusterrole:
         verbs:
           - create
           - patch
+          - list
+          - watch
 
 Run this controller on Kubernetes with the following commands:
 
