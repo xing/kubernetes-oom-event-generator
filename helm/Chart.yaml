@@ -1,0 +1,13 @@
+apiVersion: v2
+name: oom-generator
+description: Deploy oom-generator stack on your cluster
+type: application
+
+version: 1.0.0
+appVersion: 1.0.0
+
+maintainers:
+  - name: Vasek
+    url: https://github.com/TomChv
+
+icon: "https://img.icons8.com/ios/50/000000/online.png"

@@ -1,0 +1,40 @@
+## Global values
+global:
+  image: xingse/kubernetes-oom-event-generator
+  labels:
+    - name: app
+      value: oom-generator
+
+# Perms metadata
+perms:
+  account:
+    name: oom-generator-service-account
+  role:
+    name: oom-generator-cluster-role
+
+# Deployment configuration
+deployment:
+  ## Metadata
+  name: oom-generator-deployment
+
+  ## Replicas
+  replicas: "1"
+
+  ## Spec
+
+  ### Pod policy
+  restartPolicy: Always
+  ### Image policy
+  imagePullPolicy: Always
+
+  ###
+  config:
+    verbose: "2"
+
+  ### Resources
+  resources:
+    limits:
+      - name: memory
+        value: 128M
+      - name: cpu
+        value: 124m

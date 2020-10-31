@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- range .Values.global.labels }}
+    {{ .name}}: {{.value}}
+    {{- end}}
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- range .Values.global.labels }}
+      {{ .name}}: {{.value}}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- range .Values.global.labels }}
+        {{ .name}}: {{.value}}
+        {{- end }}
+    spec:
+      restartPolicy: {{ .Values.deployment.restartPolicy }}
+      containers:
+        - name: {{ .Values.deployment.name }}
+          image: {{ .Values.global.image }}
+          imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+          env:
+            - name: VERBOSE
+              value: {{ .Values.deployment.config.verbose | quote }}
+          resources:
+            limits:
+              {{- range .Values.deployment.resources.limits }}
+              {{ .name }}: {{ .value }}
+              {{- end }}
+      serviceAccountName: {{ .Values.perms.account.name }}
