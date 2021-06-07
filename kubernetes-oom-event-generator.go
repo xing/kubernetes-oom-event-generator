@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"github.com/golang/glog"
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/xing/kubernetes-oom-event-generator/src/controller"
 	"github.com/xing/kubernetes-oom-event-generator/src/util"
 )
@@ -33,7 +33,7 @@ func main() {
 	eventGenerator := controller.NewController(stopChan)
 	util.InstallSignalHandler(eventGenerator.Stop)
 
-	http.Handle("/metrics", prometheus.Handler())
+	http.Handle("/metrics", promhttp.Handler())
 	addr := fmt.Sprintf("0.0.0.0:10254")
 	go func() { glog.Fatal(http.ListenAndServe(addr, nil)) }()
 
