@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 ### Fixed
 
+## [1.2.0] - 2021-06-10
+
+### Changed
+
+- Update for kubernetes 1.20+
+- Update Prometheus Go client library
+- Bump up Go version
+
 ## [1.1.0] - 2019-09-18
 ### Changed
 - Use container started events instead of pod updates
@@ -26,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial release as Open-Source under the Apache License v2.0
 
 [Unreleased]: https://github.com/xing/kubernetes-oom-event-generator/compare/v1.1.0...HEAD
+[1.2.0] https://github.com/xing/kubernetes-oom-event-generator/compare/v1.1.0...v1.2.0 
 [1.1.0]: https://github.com/xing/kubernetes-oom-event-generator/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/xing/kubernetes-oom-event-generator/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/xing/kubernetes-oom-event-generator/compare/afe6c88c3a8925c7c72ccecf4f52ff1addbbba2d...v1.0.0
