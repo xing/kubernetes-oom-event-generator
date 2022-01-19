@@ -1,4 +1,4 @@
-FROM golang:1.13.0
+FROM golang:1.17.0
 COPY . /src/
 WORKDIR /src/
 
@@ -11,6 +11,6 @@ RUN make clean \
   && make test \
   && make
 
-FROM ubuntu:xenial
+FROM ubuntu:focal
 COPY --from=0 /src/kubernetes-oom-event-generator /usr/bin/kubernetes-oom-event-generator
 ENTRYPOINT ["/usr/bin/kubernetes-oom-event-generator"]

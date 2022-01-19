@@ -6,7 +6,7 @@ BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
 all: kubernetes-oom-event-generator
 
 kubernetes-oom-event-generator:
-	go build -i
+	go build
 
 clean:
 	go clean ./...
