@@ -1,6 +1,6 @@
 # kubernetes-oom-event-generator
 
-[![Build Status](https://travis-ci.org/xing/kubernetes-oom-event-generator.svg?branch=master)](https://travis-ci.org/xing/kubernetes-oom-event-generator)
+[![Release Image](https://github.com/xing/kubernetes-oom-event-generator/actions/workflows/release-image.yml/badge.svg)](https://github.com/xing/kubernetes-oom-event-generator/actions/workflows/release-image.yml)
 
 Generates Kubernetes Event when a container is starting and indicates that
 it was previously out-of-memory killed.
@@ -29,11 +29,11 @@ and a reason of `PreviousContainerWasOOMKilled`.
     Help Options:
       -h, --help     Show this help message
 
-Run the pre-built image [`xingse/kubernetes-oom-event-generator`] locally (with
+Run the pre-built image [`ghcr.io/xing/kubernetes-oom-event-generator`] locally (with
 local permission):
 
     echo VERBOSE=2 >> .env
-    docker run --env-file=.env -v $HOME/.kube/config:/root/.kube/config xingse/kubernetes-oom-event-generator
+    docker run --env-file=.env -v $HOME/.kube/config:/root/.kube/config ghcr.io/xing/kubernetes-oom-event-generator
 
 ## Deployment
 
@@ -77,10 +77,21 @@ Run this controller on Kubernetes with the following commands:
       --serviceaccount=kube-system:kubernetes-oom-event-generator
 
     kubectl run kubernetes-oom-event-generator \
-      --image=xingse/kubernetes-oom-event-generator \
+      --image=ghcr.io/xing/kubernetes-oom-event-generator \
       --env=VERBOSE=2 \
       --serviceaccount=kubernetes-oom-event-generator \
       --namespace=kube-system
+
+The image can be built and published for both `linux/amd64` and `linux/arm64`:
+
+    make push-image
+
+Kubernetes will pull the `linux/arm64` image variant on AWS Graviton nodes. To
+force this controller onto Graviton nodes in a mixed cluster, add this node selector
+to the pod template:
+
+    nodeSelector:
+      kubernetes.io/arch: arm64
 
 ## Alerting on OOM killed pods
 
@@ -128,10 +139,22 @@ external dependencies, compile the code and run the tests. If all goes well, hac
 and submit a pull request. You might need to modify the `go.mod` to specify desired
 constraints on dependencies.
 
+Build a Linux ARM64 binary for Graviton:
+
+    make GOOS=linux GOARCH=arm64
+
+Build a local ARM64 Docker image:
+
+    make image PLATFORM=linux/arm64
+
+Build and push a multi-architecture Docker image for AMD64 and ARM64:
+
+    make push-image
+
 Make sure to run `go mod tidy` before you check in after changing dependencies in any way.
 
 [Go module system]: https://github.com/golang/go/wiki/Modules
-[`xingse/kubernetes-oom-event-generator`]: https://hub.docker.com/r/xingse/kubernetes-oom-event-generator
+[`ghcr.io/xing/kubernetes-oom-event-generator`]: https://github.com/orgs/xing/packages/container/package/kubernetes-oom-event-generator
 [Graylog docs]: https://docs.graylog.org/
 [kubernetes-event-forwarder-gelf]: https://github.com/xing/kubernetes-event-forwarder-gelf
 [kube-state-metrics]: https://github.com/kubernetes/kube-state-metrics
@@ -148,5 +171,8 @@ Releases are a two-step process, beginning with a manual step:
 * Run `make release`, which will create an image, retrieve the version from the
   binary, create a git tag and push both your commit and the tag
 
-The Travis CI run will then realize that the current tag refers to the current master commit and
-will tag the built docker image accordingly.
+The GitHub Actions release workflow will publish the multi-architecture image to
+GitHub Container Registry:
+
+    ghcr.io/xing/kubernetes-oom-event-generator:latest
+    ghcr.io/xing/kubernetes-oom-event-generator:<tag>

@@ -1,0 +1,6 @@
+defaultBaseImage: ubuntu:24.04
+defaultPlatforms:
+- linux/amd64
+- linux/arm64
+defaultEnv:
+- CGO_ENABLED=0
