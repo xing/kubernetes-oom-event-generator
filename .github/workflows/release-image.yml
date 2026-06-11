@@ -23,6 +23,11 @@ jobs:
         go-version: '1.26.2'
         cache: true
 
+    - name: Set up test kubeconfig
+      run: |
+        mkdir -p "${HOME}/.kube"
+        cp testdata/.kube/config "${HOME}/.kube/config"
+
     - name: Run tests
       run: go test -v ./...
 
