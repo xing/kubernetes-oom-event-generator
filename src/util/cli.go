@@ -11,7 +11,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 )
 
-// ParseArgs needs a struct compatible to jeddevdk/go-flags and will fill it
+// ParseArgs needs a struct compatible with jessevdk/go-flags and will fill it
 // based on CLI parameters.
 func ParseArgs(options interface{}) {
 	_, err := flags.ParseArgs(options, os.Args)

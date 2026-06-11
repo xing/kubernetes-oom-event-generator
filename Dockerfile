@@ -10,8 +10,7 @@ WORKDIR /src/
 
 COPY ./testdata/.kube/config /root/.kube/config
 
-# We need to disable cgo support, otherwise images built on scratch will fail with this error message:
-# standard_init_linux.go:195: exec user process caused "no such file or directory"
+# Disable cgo so the binary stays self-contained across amd64 and arm64 images.
 ENV CGO_ENABLED=0
 RUN make clean \
   && make test \

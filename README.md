@@ -1,6 +1,6 @@
 # kubernetes-oom-event-generator
 
-[![Release Image](https://github.com/xing/kubernetes-oom-event-generator/actions/workflows/release-image.yml/badge.svg)](https://github.com/xing/kubernetes-oom-event-generator/actions/workflows/release-image.yml)
+[![Image](https://github.com/xing/kubernetes-oom-event-generator/actions/workflows/release-image.yml/badge.svg)](https://github.com/xing/kubernetes-oom-event-generator/actions/workflows/release-image.yml)
 
 Generates Kubernetes Event when a container is starting and indicates that
 it was previously out-of-memory killed.
@@ -37,10 +37,10 @@ local permission):
 
 ## Deployment
 
-Example Clusterrole:
+Example ClusterRole:
 
     ---
-    apiVersion: rbac.authorization.k8s.io/v1beta1
+    apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
       name: xing:controller:kubernetes-oom-event-generator
@@ -82,7 +82,8 @@ Run this controller on Kubernetes with the following commands:
       --serviceaccount=kubernetes-oom-event-generator \
       --namespace=kube-system
 
-The image can be built and published for both `linux/amd64` and `linux/arm64`:
+Published images support both `linux/amd64` and `linux/arm64`. A multi-architecture
+image can also be built and pushed manually:
 
     make push-image
 
@@ -128,11 +129,16 @@ The downside is that `kube_pod_container_status_terminated_reason` always return
 a container starts back up. See the introduction of
 [`kube_pod_container_status_last_terminated_reason`] for more details.
 
+This controller also exposes its own Prometheus counter for processed container updates:
+
+    kubernetes_oom_event_generator_container_updates_processed_total
+
+The `update_type="oomkilled_event_sent"` label value counts generated
+`PreviousContainerWasOOMKilled` events.
+
 # Developing
 
-You will need a working Go installation (1.11+) and the `make` program.  You will also
-need to clone the project to a place outside you normal go code hierarchy (usually
-`~/go`), as it uses the new [Go module system].
+You will need a working Go 1.26.2 installation and the `make` program.
 
 All build and install steps are managed in the central `Makefile`. `make test` will fetch
 external dependencies, compile the code and run the tests. If all goes well, hack along
@@ -147,13 +153,17 @@ Build a local ARM64 Docker image:
 
     make image PLATFORM=linux/arm64
 
-Build and push a multi-architecture Docker image for AMD64 and ARM64:
+Build and push a multi-architecture Docker image manually for AMD64 and ARM64
+(requires registry write access):
 
     make push-image
 
+Pull requests run the `Image / Validate` GitHub Actions workflow. It runs the
+test suite and performs a non-publishing `ko` build for `linux/amd64` and
+`linux/arm64`.
+
 Make sure to run `go mod tidy` before you check in after changing dependencies in any way.
 
-[Go module system]: https://github.com/golang/go/wiki/Modules
 [`ghcr.io/xing/kubernetes-oom-event-generator`]: https://github.com/orgs/xing/packages/container/package/kubernetes-oom-event-generator
 [Graylog docs]: https://docs.graylog.org/
 [kubernetes-event-forwarder-gelf]: https://github.com/xing/kubernetes-event-forwarder-gelf
@@ -168,11 +178,14 @@ Releases are a two-step process, beginning with a manual step:
 * Create a release commit
   * Increase the version number in [kubernetes-oom-event-generator.go/VERSION](kubernetes-oom-event-generator.go#20)
   * Adjust the [CHANGELOG](CHANGELOG.md)
-* Run `make release`, which will create an image, retrieve the version from the
-  binary, create a git tag and push both your commit and the tag
+* Run `make release`, which will create a local image, retrieve the version from
+  the binary, create a git tag and push both your commit and the tag
 
-The GitHub Actions release workflow will publish the multi-architecture image to
-GitHub Container Registry:
+Version tags matching `v*` run the GitHub Actions publish job, which publishes
+the multi-architecture image to GitHub Container Registry:
 
     ghcr.io/xing/kubernetes-oom-event-generator:latest
     ghcr.io/xing/kubernetes-oom-event-generator:<tag>
+
+After the first publish, verify that the GitHub Container Registry package is
+public if the image should be pullable without authentication.

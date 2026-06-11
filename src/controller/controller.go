@@ -21,8 +21,8 @@ const (
 	TerminationReasonOOMKilled = "OOMKilled"
 )
 
-// Controller is a controller that listens on Pod changes and create Kubernetes Events
-// when a container reports it was previously killed
+// Controller listens for Kubernetes Events and creates Kubernetes Events when a
+// started container reports that its previous instance was OOMKilled.
 type Controller struct {
 	Stop           chan struct{}
 	k8sFactory     informers.SharedInformerFactory
@@ -75,7 +75,7 @@ func NewController(stop chan struct{}) *Controller {
 	return controller
 }
 
-// Run is the main loop that processes Kubernetes Pod changes
+// Run is the main loop that processes Kubernetes Event notifications.
 func (c *Controller) Run() error {
 	c.k8sFactory.Start(c.stopCh)
 	c.k8sFactory.WaitForCacheSync(c.Stop)
