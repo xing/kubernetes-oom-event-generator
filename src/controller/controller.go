@@ -21,7 +21,7 @@ const (
 	TerminationReasonOOMKilled = "OOMKilled"
 )
 
-// Controller listens for Kubernetes Events and creates Kubernetes Events when a
+// Controller listens for Pod changes and creates Kubernetes Events when a
 // started container reports that its previous instance was OOMKilled.
 type Controller struct {
 	Stop           chan struct{}
