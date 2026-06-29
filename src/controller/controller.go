@@ -75,7 +75,7 @@ func NewController(stop chan struct{}) *Controller {
 	return controller
 }
 
-// Run is the main loop that processes Kubernetes Event notifications.
+// Run is the main loop that processes Pod changes.
 func (c *Controller) Run() error {
 	c.k8sFactory.Start(c.stopCh)
 	c.k8sFactory.WaitForCacheSync(c.Stop)
