@@ -13,15 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add support for building and publishing multi-architecture Docker images for `linux/amd64` and `linux/arm64`.
-- Add Docker image build support for AWS Graviton.
+- Add support for building and publishing multi-architecture container images for `linux/amd64` and `linux/arm64`.
+- Add container image build support for AWS Graviton.
 - Add GitHub Actions release workflow using `ko` to publish multi-architecture images to GitHub Container Registry.
 
 ### Changed
 
-- Update Docker builder image to Go 1.26.2 to align with Kubernetes 1.36.
-- Update Docker runtime image from Ubuntu Xenial to Ubuntu 24.04.
-- Disable the old Travis Docker Hub deployment path.
+- Use Go 1.26.2 in the image build workflow to align with Kubernetes 1.36.
+- Use Ubuntu 24.04 as the `ko` container base image.
+- Use `ko` for local image, Docker load, and release image build targets.
+- Remove the old Travis CI and Dockerfile image build paths.
 - Switch the default image repository from Docker Hub to GitHub Container Registry.
 - Update vulnerable Go dependencies reported by Dependabot.
 

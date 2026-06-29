@@ -1,12 +1,16 @@
-.PHONY: install clean test image buildx-builder push-image kubernetes-oom-event-generator
+.PHONY: install clean test image load-image push-image kubernetes-oom-event-generator
 
-IMAGE := ghcr.io/xing/kubernetes-oom-event-generator
+KO_DOCKER_REPO ?= ghcr.io/xing
 PLATFORM ?= linux/amd64
 PLATFORMS ?= linux/amd64,linux/arm64
-BUILDX_BUILDER ?= kubernetes-oom-event-generator-builder
+OCI_LAYOUT_PATH ?= /tmp/kubernetes-oom-event-generator-image
+IMAGE_TAG ?= latest
+IMAGE_LABEL ?= org.opencontainers.image.source=https://github.com/xing/kubernetes-oom-event-generator
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
+
+export KO_DOCKER_REPO
 
 all: kubernetes-oom-event-generator
 
@@ -20,24 +24,23 @@ test:
 	@go test -v ./...
 
 image:
-	docker build --platform $(PLATFORM) -t $(IMAGE) .
+	ko build . --platform=$(PLATFORM) --push=false --oci-layout-path $(OCI_LAYOUT_PATH) --base-import-paths --image-label "$(IMAGE_LABEL)"
 
-buildx-builder:
-	@docker buildx inspect $(BUILDX_BUILDER) >/dev/null 2>&1 || docker buildx create --name $(BUILDX_BUILDER) --driver docker-container >/dev/null
-	@docker buildx inspect --bootstrap $(BUILDX_BUILDER) >/dev/null
+load-image:
+	ko build . --local --platform=$(PLATFORM) --tags $(IMAGE_TAG) --base-import-paths --image-label "$(IMAGE_LABEL)"
 
-push-image: buildx-builder
-	docker buildx build --builder $(BUILDX_BUILDER) --platform $(PLATFORMS) -t $(IMAGE) --push .
+push-image:
+	ko build . --platform=$(PLATFORMS) --tags $(IMAGE_TAG) --base-import-paths --image-label "$(IMAGE_LABEL)"
 
-release: image
+release: kubernetes-oom-event-generator
 ifneq ($(BRANCH),master)
 	$(error release only works from master, currently on '$(BRANCH)')
 endif
 	$(MAKE) perform-release
 
-TAG = $(shell docker run --rm $(IMAGE) --version | grep -oE "kubernetes-oom-event-generator [^ ]+" | cut -d ' ' -f2)
-
 perform-release:
-	git tag $(TAG)
-	git push origin $(TAG)
+	tag=$$(./kubernetes-oom-event-generator --version | grep -oE "kubernetes-oom-event-generator [^ ]+" | cut -d ' ' -f2); \
+	test -n "$$tag"; \
+	git tag "$$tag"; \
+	git push origin "$$tag"; \
 	git push origin master

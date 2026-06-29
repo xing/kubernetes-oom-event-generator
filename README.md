@@ -138,7 +138,8 @@ The `update_type="oomkilled_event_sent"` label value counts generated
 
 # Developing
 
-You will need a working Go 1.26.2 installation and the `make` program.
+You will need a working Go 1.26.2 installation and the `make` program. The
+image build targets also require `ko`.
 
 All build and install steps are managed in the central `Makefile`. `make test` will fetch
 external dependencies, compile the code and run the tests. If all goes well, hack along
@@ -149,12 +150,16 @@ Build a Linux ARM64 binary for Graviton:
 
     make GOOS=linux GOARCH=arm64
 
-Build a local ARM64 Docker image:
+Build a local ARM64 OCI image layout with `ko`:
 
     make image PLATFORM=linux/arm64
 
-Build and push a multi-architecture Docker image manually for AMD64 and ARM64
-(requires registry write access):
+Load a single-platform image into the local Docker daemon:
+
+    make load-image
+
+Build and push a multi-architecture image manually for AMD64 and ARM64
+(requires `ko` and registry write access):
 
     make push-image
 
@@ -178,8 +183,8 @@ Releases are a two-step process, beginning with a manual step:
 * Create a release commit
   * Increase the version number in [kubernetes-oom-event-generator.go/VERSION](kubernetes-oom-event-generator.go#20)
   * Adjust the [CHANGELOG](CHANGELOG.md)
-* Run `make release`, which will create a local image, retrieve the version from
-  the binary, create a git tag and push both your commit and the tag
+* Run `make release`, which will build the binary, retrieve the version from it,
+  create a git tag and push both your commit and the tag
 
 Version tags matching `v*` run the GitHub Actions publish job, which publishes
 the multi-architecture image to GitHub Container Registry:
